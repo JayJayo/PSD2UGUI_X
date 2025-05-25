@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEditor.SceneManagement;
 
 namespace UGF.EditorTools.Psd2UGUI
 {
@@ -234,7 +235,7 @@ namespace UGF.EditorTools.Psd2UGUI
         public static bool HasUITypeFlag(string layerName, out string tpFlag)
         {
             tpFlag = null;
-            if (string.IsNullOrWhiteSpace(layerName) || layerName.EndsWith(UGUIParser.UITYPE_SPLIT_CHAR)) return false;
+            if (string.IsNullOrWhiteSpace(layerName) || layerName.EndsWith(UGUIParser.UITYPE_SPLIT_CHAR.ToString())) return false;
             int startIdx = -1;
             for (int i = layerName.Length - 1; i >= 0; i--)
             {
@@ -523,6 +524,13 @@ namespace UGF.EditorTools.Psd2UGUI
                 Debug.LogException(e);
             }
 
+        }
+        public static string GetRelativePath(string basePath, string path)
+        {
+            Uri baseUri = new Uri(basePath.EndsWith("\\") ? basePath : basePath + "\\");
+            Uri pathUri = new Uri(path);
+            string relativePath = Uri.UnescapeDataString(baseUri.MakeRelativeUri(pathUri).ToString());
+            return relativePath.Replace("/", Path.DirectorySeparatorChar.ToString());
         }
     }
 }

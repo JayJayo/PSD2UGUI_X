@@ -16,6 +16,10 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
+#if UNITY_2018_3_OR_NEWER
+using UnityEditor.Experimental.SceneManagement;
+#endif
+
 namespace UGF.EditorTools.Psd2UGUI
 {
     [CustomEditor(typeof(Psd2UIFormConverter))]
@@ -69,7 +73,7 @@ namespace UGF.EditorTools.Psd2UGUI
                         {
                             if (!retPath.StartsWith("Assets/"))
                             {
-                                retPath = Path.GetRelativePath(Directory.GetParent(Application.dataPath).FullName, retPath);
+                                retPath = UGUIParser.GetRelativePath(Application.dataPath, retPath);
                             }
                             Psd2UIFormSettings.Instance.UIImagesOutputDir = retPath;
                             Psd2UIFormSettings.Save();
@@ -92,7 +96,7 @@ namespace UGF.EditorTools.Psd2UGUI
                             {
                                 if (!retPath.StartsWith("Assets/"))
                                 {
-                                    retPath = Path.GetRelativePath(Directory.GetParent(Application.dataPath).FullName, retPath);
+                                    retPath = UGUIParser.GetRelativePath(Application.dataPath, retPath);
                                 }
                                 Psd2UIFormSettings.Instance.UIFormOutputDir = retPath;
                                 Psd2UIFormSettings.Save();
@@ -346,7 +350,15 @@ namespace UGF.EditorTools.Psd2UGUI
         /// <param name="psdLayerPrefab"></param>
         public static void OpenPsdLayerEditor(string psdLayerPrefab)
         {
-            PrefabStageUtility.OpenPrefab(psdLayerPrefab);
+#if UNITY_2018_3_OR_NEWER
+            var prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(psdLayerPrefab);
+            if (prefabAsset != null)
+            {
+                AssetDatabase.OpenAsset(prefabAsset);
+            }
+#else
+            AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<GameObject>(psdLayerPrefab));
+#endif
         }
         /// <summary>
         /// 把Psd图层解析成节点prefab
@@ -391,7 +403,11 @@ namespace UGF.EditorTools.Psd2UGUI
                 AssetDatabase.Refresh();
                 if (savePrefabSuccess && AssetDatabase.GUIDFromAssetPath(StageUtility.GetCurrentStage().assetPath) != AssetDatabase.GUIDFromAssetPath(prefabFile))
                 {
-                    PrefabStageUtility.OpenPrefab(prefabFile);
+                    var prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabFile);
+                    if (prefabAsset != null)
+                    {
+                        AssetDatabase.OpenAsset(prefabAsset);
+                    }
                 }
 
                 return savePrefabSuccess;
@@ -399,6 +415,7 @@ namespace UGF.EditorTools.Psd2UGUI
         }
         private static void ParsePsdLayer2Root(string psdFile, Psd2UIFormConverter converter)
         {
+            var prefabFile = GetPsdLayerPrefabPath(psdFile);
             //清空已有节点重新解析
             for (int i = converter.transform.childCount - 1; i >= 0; i--)
             {
@@ -459,6 +476,11 @@ namespace UGF.EditorTools.Psd2UGUI
                 Debug.LogException(e);
             }
             
+            var prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabFile);
+            if (prefabAsset != null)
+            {
+                AssetDatabase.OpenAsset(prefabAsset);
+            }
         }
         private void SetPsdAsset(string psdFile)
         {
@@ -584,7 +606,7 @@ namespace UGF.EditorTools.Psd2UGUI
                 if (!string.IsNullOrWhiteSpace(selectDir))
                 {
                     if (!selectDir.StartsWith("Assets/"))
-                        selectDir = Path.GetRelativePath(Directory.GetParent(Application.dataPath).FullName, selectDir);
+                        selectDir = UGUIParser.GetRelativePath(Application.dataPath, selectDir);
                     Psd2UIFormSettings.Instance.LastUIFormOutputDir = selectDir;
                     ExportUIPrefab(selectDir);
                 }
@@ -684,7 +706,8 @@ namespace UGF.EditorTools.Psd2UGUI
                     {
                         targetNode = new GameObject(nodeName);
                         targetNode.transform.SetParent(result.transform, false);
-                        targetNode.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+                        targetNode.transform.localPosition = Vector3.zero;
+                        targetNode.transform.localRotation = Quaternion.identity;
                         var targetNodeKey = targetNode.GetComponent<UIStringKey>() ?? targetNode.AddComponent<UIStringKey>();
                         targetNodeKey.Key = nodeId;
                     }
@@ -779,7 +802,7 @@ namespace UGF.EditorTools.Psd2UGUI
         /// <returns></returns>
         public static bool CompressImageFile(string asset)
         {
-            var assetPath = asset.StartsWith("Assets/") ? Path.GetFullPath(asset, Directory.GetParent(Application.dataPath).FullName) : asset;
+            var assetPath = asset.StartsWith("Assets/") ? Path.Combine(Directory.GetParent(Application.dataPath).FullName, asset) : asset;
             var compressTool = Utility.Assembly.GetType("UGF.EditorTools.CompressTool");
             if (compressTool == null) return false;
 
