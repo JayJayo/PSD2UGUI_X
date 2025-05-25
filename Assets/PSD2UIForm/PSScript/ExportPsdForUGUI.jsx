@@ -96,80 +96,74 @@ app.activeDocument.suspendHistory("Convert2SmartObject", "convertAndExport();");
 //~ convertLayersToSmartObjects (app.activeDocument.layers);
 
 
-// JSON polyfill for ExtendScript
-if (typeof JSON !== 'object') {
-    JSON = {};
-}
-
-// JSON.stringify polyfill
-// 仅在原生 JSON.stringify 不存在时实现（如 ExtendScript 环境）
-if (typeof JSON.stringify !== 'function') {
+// 检查并实现 JSON.stringify（完全兼容 ExtendScript）
+if (typeof JSON === 'undefined' || typeof JSON.stringify !== 'function') {
+    if (typeof JSON === 'undefined') JSON = {};
+    
     JSON.stringify = function(obj, replacer, space) {
-        // 缓存已处理对象（用于检测循环引用）
         var cache = [];
-        
-        // 核心序列化函数
         function serialize(key, value) {
             // 处理循环引用
             if (typeof value === 'object' && value !== null) {
-                if (cache.indexOf(value) !== -1) return '[Circular]';
+                // 检查是否已经处理过这个对象
+                for (var i = 0; i < cache.length; i++) {
+                    if (cache[i] === value) return '[Circular]';
+                }
                 cache.push(value);
             }
-
-            // 优先调用对象的 toJSON 方法
+            
+            // 处理特殊对象（Date/RegExp）
+            if (value instanceof Date) return '"' + value.toISOString() + '"';
+            if (value instanceof RegExp) return '"' + value.toString() + '"';
+            
+            // 调用自定义 toJSON
             if (value && typeof value.toJSON === 'function') {
                 value = value.toJSON(key);
             }
-
-            // 应用自定义 replacer
+            
+            // 应用 replacer
             if (replacer) {
                 value = typeof replacer === 'function' 
                     ? replacer(key, value)
-                    : (replacer.indexOf(key) !== -1 ? value : undefined);
+                    : (replacer && replacer.length && replacer.indexOf(key) !== -1 ? value : undefined);
             }
-
-            // 按类型序列化
-            if (value === null) return 'null';
-            switch (typeof value) {
-                case 'string': return '"' + value.replace(/"/g, '\\"') + '"';
-                case 'number': return isFinite(value) ? String(value) : 'null';
-                case 'boolean': return String(value);
-                case 'object':
-                    if (Array.isArray(value)) {
-                        return '[' + value.map(function(v, i) {
-                            return serialize(i, v) || 'null';
-                        }).join(',') + ']';
-                    } else {
-                        var props = [];
-                        for (var k in value) {
-                            if (value.hasOwnProperty(k)) {
-                                var v = serialize(k, value[k]);
-                                if (v !== undefined) {
-                                    props.push('"' + k + '":' + v);
-                                }
-                            }
-                        }
-                        return '{' + props.join(',') + '}';
-                    }
-                default: return undefined; // 忽略 function/undefined/symbol
+            
+            // 基础类型处理
+            if (value === null || typeof value !== 'object') {
+                return typeof value === 'string' 
+                    ? '"' + value.replace(/"/g, '\\"') + '"'
+                    : String(value);
             }
+            
+            // 数组/对象处理
+            if (value.constructor === Array) {
+                var arrResult = [];
+                for (var i = 0; i < value.length; i++) {
+                    var v = serialize(i, value[i]);
+                    if (v !== undefined) arrResult.push(v);
+                }
+                return '[' + arrResult.join(',') + ']';
+            }
+            
+            var props = [];
+            for (var k in value) {
+                if (value.hasOwnProperty(k)) {
+                    var v = serialize(k, value[k]);
+                    if (v !== undefined) props.push('"' + k + '":' + v);
+                }
+            }
+            return '{' + props.join(',') + '}';
         }
-
-        // 执行序列化
+        
         try {
             var result = serialize('', obj);
             cache = null;
-            
-            // 美化输出（简化版）
-            if (space) {
-                if (typeof space === 'number') {
-                    space = ' '.repeat(Math.min(10, space));
-                }
-                result = result.replace(/[{,]/g, '$&\n' + space);
-            }
             return result;
         } catch (e) {
-            console.error('JSON.stringify error:', e);
+            // ExtendScript 专用错误输出
+            if (typeof $.writeln === 'function') {
+                $.writeln('JSON.stringify error: ' + e.message);
+            }
             return 'null';
         }
     };
@@ -333,18 +327,22 @@ function getTextLayerInfo(layer) {
  * @param {Array} parentPath - 父图层路径
  */
 function processLayer(layer, index, parentPath) {
+    // 计算位置和尺寸
+    var bounds = layer.bounds;
+    var position = {
+        x: Number(bounds[0].value),
+        y: Number(bounds[1].value),
+        width: Number(bounds[2].value - bounds[0].value),
+        height: Number(bounds[3].value - bounds[1].value)
+    };
+
     var layerInfo = {
         id: layer.id.toString(),
         name: layer.name,
         type: getLayerType(layer),
         visible: layer.visible,
         opacity: layer.opacity / 100,
-        position: {
-            x: layer.bounds[0],
-            y: layer.bounds[1],
-            width: layer.bounds[2] - layer.bounds[0],
-            height: layer.bounds[3] - layer.bounds[1]
-        },
+        position: position,
         effects: getLayerEffects(layer),
         color: getLayerColor(layer),
         parentId: parentPath.length > 0 ? parentPath[parentPath.length - 1] : null
