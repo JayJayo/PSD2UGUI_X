@@ -1,8 +1,9 @@
 ﻿/*
-    联系作者:
-    https://blog.csdn.net/final5788
-    https://github.com/sunsvip
+    PSD2UGUI - Photoshop to Unity UGUI Converter
+    Copyright (c) 2024
+    All rights reserved.
  */
+
 #if UNITY_EDITOR
 using System.Collections;
 using System.Collections.Generic;
@@ -11,9 +12,24 @@ using UnityEngine;
 
 namespace UGF.EditorTools.Psd2UGUI
 {
+    /// <summary>
+    /// 只读字段特性，用于在Unity编辑器中标记只读字段
+    /// </summary>
     public class ReadOnlyFieldAttribute : PropertyAttribute
     {
+        /// <summary>
+        /// 是否在编辑器中显示
+        /// </summary>
+        public bool ShowInInspector { get; private set; }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="showInInspector">是否在编辑器中显示</param>
+        public ReadOnlyFieldAttribute(bool showInInspector = true)
+        {
+            ShowInInspector = showInInspector;
+        }
     }
     [CustomPropertyDrawer(typeof(ReadOnlyFieldAttribute))]
     public class ReadOnlyFieldDrawer : PropertyDrawer

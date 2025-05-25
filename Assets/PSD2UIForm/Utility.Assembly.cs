@@ -1,15 +1,20 @@
 ﻿/*
-    联系作者:
-    https://blog.csdn.net/final5788
-    https://github.com/sunsvip
+    PSD2UGUI - Photoshop to Unity UGUI Converter
+    Copyright (c) 2024
+    All rights reserved.
  */
-#if UNITY_EDITOR
+
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using UnityEngine;
 
 namespace UGF.EditorTools.Psd2UGUI
 {
-    public static partial class Utility
+    /// <summary>
+    /// 程序集工具类，提供程序集相关的工具方法
+    /// </summary>
+    public static class Utility
     {
         /// <summary>
         /// 程序集相关的实用函数。
@@ -18,6 +23,9 @@ namespace UGF.EditorTools.Psd2UGUI
         {
             private static readonly System.Reflection.Assembly[] s_Assemblies = null;
             private static readonly Dictionary<string, Type> s_CachedTypes = new Dictionary<string, Type>(StringComparer.Ordinal);
+            private static System.Reflection.Assembly currentAssembly;
+            private static Dictionary<Type, System.Reflection.Assembly> typeAssemblyMap = new Dictionary<Type, System.Reflection.Assembly>();
+            private static Dictionary<System.Reflection.Assembly, Type[]> assemblyTypesMap = new Dictionary<System.Reflection.Assembly, Type[]>();
 
             static Assembly()
             {
@@ -103,7 +111,85 @@ namespace UGF.EditorTools.Psd2UGUI
 
                 return null;
             }
+
+            /// <summary>
+            /// 获取当前程序集
+            /// </summary>
+            public static System.Reflection.Assembly Current
+            {
+                get
+                {
+                    if (currentAssembly == null)
+                    {
+                        currentAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    }
+                    return currentAssembly;
+                }
+            }
+
+            /// <summary>
+            /// 获取指定类型的程序集
+            /// </summary>
+            /// <param name="type">要获取程序集的类型</param>
+            /// <returns>包含指定类型的程序集</returns>
+            public static System.Reflection.Assembly GetAssembly(Type type)
+            {
+                if (type == null) return null;
+                if (typeAssemblyMap.TryGetValue(type, out var assembly))
+                {
+                    return assembly;
+                }
+                assembly = type.Assembly;
+                typeAssemblyMap[type] = assembly;
+                return assembly;
+            }
+
+            /// <summary>
+            /// 获取指定类型的程序集
+            /// </summary>
+            /// <typeparam name="T">要获取程序集的类型</typeparam>
+            /// <returns>包含指定类型的程序集</returns>
+            public static System.Reflection.Assembly GetAssembly<T>()
+            {
+                return GetAssembly(typeof(T));
+            }
+
+            /// <summary>
+            /// 获取程序集中的所有类型
+            /// </summary>
+            /// <param name="assembly">要查询的程序集</param>
+            /// <returns>程序集中的所有类型</returns>
+            public static Type[] GetTypes(System.Reflection.Assembly assembly)
+            {
+                if (assembly == null) return null;
+                if (assemblyTypesMap.TryGetValue(assembly, out var types))
+                {
+                    return types;
+                }
+                types = assembly.GetTypes();
+                assemblyTypesMap[assembly] = types;
+                return types;
+            }
+
+            /// <summary>
+            /// 获取指定程序集中的所有类型
+            /// </summary>
+            /// <typeparam name="T">要获取程序集的类型</typeparam>
+            /// <returns>程序集中的所有类型</returns>
+            public static Type[] GetTypes<T>()
+            {
+                return GetTypes(GetAssembly<T>());
+            }
+
+            /// <summary>
+            /// 获取指定程序集中的所有类型
+            /// </summary>
+            /// <param name="type">要获取程序集的类型</param>
+            /// <returns>程序集中的所有类型</returns>
+            public static Type[] GetTypes(Type type)
+            {
+                return GetTypes(GetAssembly(type));
+            }
         }
     }
 }
-#endif

@@ -1,8 +1,20 @@
-﻿
-    // 联系作者:
-    // https://blog.csdn.net/final5788
-    // https://github.com/sunsvip
- 
+﻿/*
+    PSD2UGUI - Photoshop to Unity UGUI Converter
+    Copyright (c) 2024
+    All rights reserved.
+ */
+
+/**
+ * 联系作者:
+ * https://blog.csdn.net/final5788
+ * https://github.com/sunsvip
+ */
+
+/**
+ * 检查图层是否有效果
+ * @param {Layer} layer - 要检查的图层
+ * @returns {boolean} 图层是否有效果
+ */
 function hasLayerEffect(layer) {
     app.activeDocument.activeLayer = layer;
 	var hasEffect = false;
@@ -20,6 +32,11 @@ function hasLayerEffect(layer) {
 	}
 	return hasEffect;
 }
+
+/**
+ * 将图层转换为智能对象
+ * @param {Array} layers - 要转换的图层数组
+ */
 function convertLayersToSmartObjects(layers) 
 {
     for (var i = layers.length - 1; i >= 0; i--) 
@@ -27,7 +44,7 @@ function convertLayersToSmartObjects(layers)
         var layer = layers[i];
         if (layer.typename === "LayerSet")
         {
-               convertLayersToSmartObjects(layer.layers); // Recursively convert layers in layer sets
+               convertLayersToSmartObjects(layer.layers); // 递归转换图层组中的图层
         } 
         else
         {

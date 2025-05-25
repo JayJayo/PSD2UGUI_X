@@ -17,68 +17,200 @@ using UnityEditor.SceneManagement;
 
 namespace UGF.EditorTools.Psd2UGUI
 {
+    /// <summary>
+    /// UI类型枚举，定义了所有支持的UI组件类型
+    /// </summary>
     public enum GUIType
     {
+        /// <summary>
+        /// 空类型
+        /// </summary>
         Null = 0,
+        /// <summary>
+        /// 图片组件
+        /// </summary>
         Image,
+        /// <summary>
+        /// 原始图片组件
+        /// </summary>
         RawImage,
+        /// <summary>
+        /// 文本组件
+        /// </summary>
         Text,
+        /// <summary>
+        /// 按钮组件
+        /// </summary>
         Button,
+        /// <summary>
+        /// 下拉框组件
+        /// </summary>
         Dropdown,
+        /// <summary>
+        /// 输入框组件
+        /// </summary>
         InputField,
+        /// <summary>
+        /// 开关组件
+        /// </summary>
         Toggle,
+        /// <summary>
+        /// 滑动条组件
+        /// </summary>
         Slider,
+        /// <summary>
+        /// 滚动视图组件
+        /// </summary>
         ScrollView,
+        /// <summary>
+        /// 遮罩组件
+        /// </summary>
         Mask,
-        FillColor, //纯色填充
+        /// <summary>
+        /// 纯色填充组件
+        /// </summary>
+        FillColor,
+        /// <summary>
+        /// TextMeshPro文本组件
+        /// </summary>
         TMPText,
+        /// <summary>
+        /// TextMeshPro按钮组件
+        /// </summary>
         TMPButton,
+        /// <summary>
+        /// TextMeshPro下拉框组件
+        /// </summary>
         TMPDropdown,
+        /// <summary>
+        /// TextMeshPro输入框组件
+        /// </summary>
         TMPInputField,
+        /// <summary>
+        /// TextMeshPro开关组件
+        /// </summary>
         TMPToggle,
 
         //UI的子类型, 以101开始。 0-100预留给UI类型, 新类型从尾部追加
-        Background = 101, //通用背景
+        /// <summary>
+        /// 通用背景
+        /// </summary>
+        Background = 101,
 
         //Button的子类型
+        /// <summary>
+        /// 按钮高亮状态
+        /// </summary>
         Button_Highlight,
+        /// <summary>
+        /// 按钮按下状态
+        /// </summary>
         Button_Press,
+        /// <summary>
+        /// 按钮选中状态
+        /// </summary>
         Button_Select,
+        /// <summary>
+        /// 按钮禁用状态
+        /// </summary>
         Button_Disable,
+        /// <summary>
+        /// 按钮文本
+        /// </summary>
         Button_Text,
 
         //Dropdown/TMPDropdown的子类型
+        /// <summary>
+        /// 下拉框标签
+        /// </summary>
         Dropdown_Label,
+        /// <summary>
+        /// 下拉框箭头
+        /// </summary>
         Dropdown_Arrow,
 
         //InputField/TMPInputField的子类型
+        /// <summary>
+        /// 输入框占位符
+        /// </summary>
         InputField_Placeholder,
+        /// <summary>
+        /// 输入框文本
+        /// </summary>
         InputField_Text,
 
         //Toggle的子类型
+        /// <summary>
+        /// 开关勾选框
+        /// </summary>
         Toggle_Checkmark,
+        /// <summary>
+        /// 开关标签
+        /// </summary>
         Toggle_Label,
 
         //Slider的子类型
+        /// <summary>
+        /// 滑动条填充
+        /// </summary>
         Slider_Fill,
+        /// <summary>
+        /// 滑动条手柄
+        /// </summary>
         Slider_Handle,
 
         //ScrollView的子类型
-        ScrollView_Viewport, //列表可视区域的遮罩图
-        ScrollView_HorizontalBarBG, //水平滑动栏背景
-        ScrollView_HorizontalBar,//水平滑块
-        ScrollView_VerticalBarBG, //垂直滑动栏背景
-        ScrollView_VerticalBar, //垂直滑动块
+        /// <summary>
+        /// 滚动视图可视区域遮罩
+        /// </summary>
+        ScrollView_Viewport,
+        /// <summary>
+        /// 水平滚动条背景
+        /// </summary>
+        ScrollView_HorizontalBarBG,
+        /// <summary>
+        /// 水平滚动条
+        /// </summary>
+        ScrollView_HorizontalBar,
+        /// <summary>
+        /// 垂直滚动条背景
+        /// </summary>
+        ScrollView_VerticalBarBG,
+        /// <summary>
+        /// 垂直滚动条
+        /// </summary>
+        ScrollView_VerticalBar,
     }
+    /// <summary>
+    /// UI解析规则类，定义了UI组件的解析规则
+    /// </summary>
     [Serializable]
     public class UGUIParseRule
     {
+        /// <summary>
+        /// UI类型
+        /// </summary>
         public GUIType UIType;
-        public string[] TypeMatches; //类型匹配标识
-        public GameObject UIPrefab; //UI模板
-        public string UIHelper; //UIHelper类型全名
-        public string Comment;//注释
+        /// <summary>
+        /// 类型匹配标识数组
+        /// </summary>
+        public string[] TypeMatches;
+        /// <summary>
+        /// UI预制体模板
+        /// </summary>
+        public GameObject UIPrefab;
+        /// <summary>
+        /// UI辅助类全名
+        /// </summary>
+        public string UIHelper;
+        /// <summary>
+        /// 注释说明
+        /// </summary>
+        public string Comment;
     }
+    /// <summary>
+    /// UGUIParser编辑器类，用于在Unity编辑器中显示和编辑UGUIParser组件
+    /// </summary>
     [CustomEditor(typeof(UGUIParser))]
     public class UGUIParserEditor : Editor
     {
@@ -145,10 +277,19 @@ namespace UGF.EditorTools.Psd2UGUI
             base.OnInspectorGUI();
         }
     }
+    /// <summary>
+    /// PSD2UIForm配置类，用于配置PSD到UI的转换规则
+    /// </summary>
     [CreateAssetMenu(fileName = "Psd2UIFormConfig", menuName = "ScriptableObject/Psd2UIForm Config【Psd2UIForm工具配置】")]
     public class UGUIParser : ScriptableObject
     {
+        /// <summary>
+        /// UI类型分隔符
+        /// </summary>
         public const char UITYPE_SPLIT_CHAR = '.';
+        /// <summary>
+        /// UI类型最大值
+        /// </summary>
         public const int UITYPE_MAX = 100;
         [HideInInspector][SerializeField] GUIType defaultTextType = GUIType.Text;
         [HideInInspector][SerializeField] GUIType defaultImageType = GUIType.Image;
@@ -156,10 +297,22 @@ namespace UGF.EditorTools.Psd2UGUI
         [SerializeField] UGUIParseRule[] rules;
         [HideInInspector][SerializeField] string readmeDoc = "使用说明";
 
+        /// <summary>
+        /// 获取默认文本类型
+        /// </summary>
         public GUIType DefaultText => defaultTextType;
+        /// <summary>
+        /// 获取默认图片类型
+        /// </summary>
         public GUIType DefaultImage => defaultImageType;
+        /// <summary>
+        /// 获取UI表单模板
+        /// </summary>
         public GameObject UIFormTemplate => uiFormTemplate;
         private static UGUIParser mInstance = null;
+        /// <summary>
+        /// 获取UGUIParser单例实例
+        /// </summary>
         public static UGUIParser Instance
         {
             get
@@ -172,10 +325,20 @@ namespace UGF.EditorTools.Psd2UGUI
                 return mInstance;
             }
         }
+        /// <summary>
+        /// 判断是否为主要的UI类型
+        /// </summary>
+        /// <param name="tp">要检查的UI类型</param>
+        /// <returns>如果是主要UI类型返回true，否则返回false</returns>
         public static bool IsMainUIType(GUIType tp)
         {
             return (int)tp <= UITYPE_MAX;
         }
+        /// <summary>
+        /// 获取UI类型的辅助类类型
+        /// </summary>
+        /// <param name="uiType">UI类型</param>
+        /// <returns>对应的辅助类Type</returns>
         public Type GetHelperType(GUIType uiType)
         {
             if (uiType == GUIType.Null) return null;
@@ -184,6 +347,11 @@ namespace UGF.EditorTools.Psd2UGUI
 
             return Type.GetType(rule.UIHelper);
         }
+        /// <summary>
+        /// 获取UI类型的解析规则
+        /// </summary>
+        /// <param name="uiType">UI类型</param>
+        /// <returns>对应的解析规则</returns>
         public UGUIParseRule GetRule(GUIType uiType)
         {
             foreach (var rule in rules)
@@ -193,11 +361,11 @@ namespace UGF.EditorTools.Psd2UGUI
             return null;
         }
         /// <summary>
-        /// 根据图层命名解析UI类型
+        /// 尝试解析图层节点
         /// </summary>
-        /// <param name="layer"></param>
-        /// <param name="comType"></param>
-        /// <returns></returns>
+        /// <param name="layer">要解析的图层节点</param>
+        /// <param name="result">解析结果</param>
+        /// <returns>解析是否成功</returns>
         public bool TryParse(PsdLayerNode layer, out UGUIParseRule result)
         {
             result = null;
@@ -232,6 +400,12 @@ namespace UGF.EditorTools.Psd2UGUI
             }
             return result != null;
         }
+        /// <summary>
+        /// 检查图层名称是否包含UI类型标记
+        /// </summary>
+        /// <param name="layerName">图层名称</param>
+        /// <param name="tpFlag">输出的类型标记</param>
+        /// <returns>是否包含UI类型标记</returns>
         public static bool HasUITypeFlag(string layerName, out string tpFlag)
         {
             tpFlag = null;
@@ -251,11 +425,14 @@ namespace UGF.EditorTools.Psd2UGUI
             return true;
         }
         /// <summary>
-        /// 根据图层大小和位置设置UI节点大小和位置
+        /// 设置RectTransform组件的大小和位置
         /// </summary>
-        /// <param name="layerNode"></param>
-        /// <param name="uiNode"></param>
+        /// <param name="layerNode">图层节点</param>
+        /// <param name="uiNode">UI节点组件</param>
         /// <param name="pos">是否设置位置</param>
+        /// <param name="width">是否设置宽度</param>
+        /// <param name="height">是否设置高度</param>
+        /// <param name="extSize">额外大小</param>
         public static void SetRectTransform(PsdLayerNode layerNode, UnityEngine.Component uiNode, bool pos = true, bool width = true, bool height = true, int extSize = 0)
         {
             if (uiNode != null && layerNode != null)
@@ -273,10 +450,10 @@ namespace UGF.EditorTools.Psd2UGUI
         }
 
         /// <summary>
-        /// 把LayerNode图片保存到本地并返回
+        /// 将图层节点转换为Texture2D
         /// </summary>
-        /// <param name="layerNode"></param>
-        /// <returns></returns>
+        /// <param name="layerNode">图层节点</param>
+        /// <returns>转换后的Texture2D</returns>
         public static Texture2D LayerNode2Texture(PsdLayerNode layerNode)
         {
             if (layerNode != null)
@@ -288,7 +465,7 @@ namespace UGF.EditorTools.Psd2UGUI
             return null;
         }
         /// <summary>
-        /// 把LayerNode图片保存到本地并返回
+        /// 将图层节点转换为Sprite
         /// </summary>
         /// <param name="layerNode"></param>
         /// <param name="auto9Slice">若没有设置Sprite的九宫,是否自动计算并设置九宫</param>
@@ -323,11 +500,11 @@ namespace UGF.EditorTools.Psd2UGUI
             return null;
         }
         /// <summary>
-        /// 自动计算贴图的 9宫 Border
+        /// 计算纹理的九宫格边界
         /// </summary>
-        /// <param name="texture"></param>
-        /// <param name="alphaThreshold">0-255</param>
-        /// <returns></returns>
+        /// <param name="texture">要计算的纹理</param>
+        /// <param name="alphaThreshold">透明度阈值(0-255)</param>
+        /// <returns>九宫格边界值</returns>
         public static Vector4 CalculateTexture9SliceBorder(Texture2D texture, byte alphaThreshold = 3)
         {
             int width = texture.width;
@@ -378,10 +555,10 @@ namespace UGF.EditorTools.Psd2UGUI
         }
 
         /// <summary>
-        /// 把PS的字体样式同步设置到UGUI Text
+        /// 设置Text组件的样式
         /// </summary>
-        /// <param name="txtLayer"></param>
-        /// <param name="text"></param>
+        /// <param name="txtLayer">文本图层节点</param>
+        /// <param name="text">要设置的Text组件</param>
         public static void SetTextStyle(PsdLayerNode txtLayer, UnityEngine.UI.Text text)
         {
             if (text == null) return;
@@ -398,10 +575,10 @@ namespace UGF.EditorTools.Psd2UGUI
             }
         }
         /// <summary>
-        /// 把PS的字体样式同步设置到TextMeshProUGUI
+        /// 设置TextMeshProUGUI组件的样式
         /// </summary>
-        /// <param name="txtLayer"></param>
-        /// <param name="text"></param>
+        /// <param name="txtLayer">文本图层节点</param>
+        /// <param name="text">要设置的TextMeshProUGUI组件</param>
         public static void SetTextStyle(PsdLayerNode txtLayer, TextMeshProUGUI text)
         {
             if (txtLayer != null && txtLayer.ParseTextLayerInfo(out var str, out var size, out var charSpace, out float lineSpace, out var col, out var style, out var tmpStyle, out var fName))
@@ -417,21 +594,20 @@ namespace UGF.EditorTools.Psd2UGUI
             }
         }
         /// <summary>
-        /// Warning:Unity导入字库字体FamilyName的特殊字符会被替换为空格,导致按原本的字体名找不到字体
-        /// 将字体名特殊字符替换为空格以解决找不到字体的问题
+        /// 获取修正后的字体名称
         /// </summary>
-        /// <param name="fontName"></param>
-        /// <returns></returns>
+        /// <param name="fontName">原始字体名称</param>
+        /// <returns>修正后的字体名称</returns>
         public static string GetFixedFontName(string fontName)
         {
             string fixedFontName = Regex.Replace(fontName, "[^A-Za-z0-9]+", " ");
             return fixedFontName;
         }
         /// <summary>
-        /// 根据字体名查找TMP_FontAsset
+        /// 查找TextMeshPro字体资源
         /// </summary>
-        /// <param name="fontName"></param>
-        /// <returns></returns>
+        /// <param name="fontName">字体名称</param>
+        /// <returns>找到的TextMeshPro字体资源</returns>
         public static TMP_FontAsset FindTMPFontAsset(string fontName)
         {
             string fixedFontName = GetFixedFontName(fontName);
@@ -449,7 +625,7 @@ namespace UGF.EditorTools.Psd2UGUI
             return null;
         }
         /// <summary>
-        /// 根据字体名查找Font Asset
+        /// 查找Font Asset
         /// </summary>
         /// <param name="fontName"></param>
         /// <returns></returns>

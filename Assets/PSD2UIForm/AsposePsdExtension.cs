@@ -1,9 +1,10 @@
 ﻿/*
-    联系作者:
-    https://blog.csdn.net/final5788
-    https://github.com/sunsvip
+    PSD2UGUI - Photoshop to Unity UGUI Converter
+    Copyright (c) 2024
+    All rights reserved.
  */
 #if UNITY_EDITOR
+
 using Aspose.PSD;
 using Aspose.PSD.FileFormats.Psd;
 using Aspose.PSD.FileFormats.Psd.Layers;
@@ -13,6 +14,9 @@ using UnityEngine;
 
 namespace UGF.EditorTools.Psd2UGUI
 {
+    /// <summary>
+    /// Aspose.PSD扩展类，提供PSD文件相关的扩展方法
+    /// </summary>
     public static class AsposePsdExtension
     {
         /// <summary>

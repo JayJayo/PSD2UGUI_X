@@ -1,7 +1,7 @@
 ﻿/*
-    联系作者:
-    https://blog.csdn.net/final5788
-    https://github.com/sunsvip
+    PSD2UGUI - Photoshop to Unity UGUI Converter
+    Copyright (c) 2024
+    All rights reserved.
  */
 #if UNITY_EDITOR
 using Aspose.PSD.FileFormats.Psd;
@@ -22,15 +22,40 @@ using UnityEditor.Experimental.SceneManagement;
 
 namespace UGF.EditorTools.Psd2UGUI
 {
+    /// <summary>
+    /// Psd2UIForm转换器的Inspector编辑器
+    /// </summary>
     [CustomEditor(typeof(Psd2UIFormConverter))]
     public class Psd2UIFormConverterInspector : UnityEditor.Editor
     {
+        /// <summary>
+        /// 目标转换器实例
+        /// </summary>
         Psd2UIFormConverter targetLogic;
 
+        /// <summary>
+        /// 解析PSD节点按钮
+        /// </summary>
         GUIContent parsePsd2NodesBt;
+
+        /// <summary>
+        /// 导出UI精灵按钮
+        /// </summary>
         GUIContent exportUISpritesBt;
+
+        /// <summary>
+        /// 生成UI表单按钮
+        /// </summary>
         GUIContent generateUIFormBt;
+
+        /// <summary>
+        /// 按钮高度选项
+        /// </summary>
         GUILayoutOption btHeight;
+
+        /// <summary>
+        /// 当Inspector启用时调用
+        /// </summary>
         private void OnEnable()
         {
             btHeight = GUILayout.Height(30);
@@ -43,10 +68,16 @@ namespace UGF.EditorTools.Psd2UGUI
                 Debug.LogWarning($"UIForm输出路径为空!");
             }
         }
+        /// <summary>
+        /// 当Inspector禁用时调用
+        /// </summary>
         private void OnDisable()
         {
             Psd2UIFormSettings.Save();
         }
+        /// <summary>
+        /// 绘制Inspector界面
+        /// </summary>
         public override void OnInspectorGUI()
         {
             EditorGUILayout.BeginVertical("box");
@@ -130,10 +161,18 @@ namespace UGF.EditorTools.Psd2UGUI
             }
             base.OnInspectorGUI();
         }
+        /// <summary>
+        /// 是否显示预览界面
+        /// </summary>
         public override bool HasPreviewGUI()
         {
             return targetLogic.BindPsdAsset != null;
         }
+        /// <summary>
+        /// 绘制预览界面
+        /// </summary>
+        /// <param name="r">预览区域</param>
+        /// <param name="background">背景样式</param>
         public override void OnPreviewGUI(Rect r, GUIStyle background)
         {
             GUI.DrawTexture(r, targetLogic.BindPsdAsset.texture, ScaleMode.ScaleToFit);
@@ -141,25 +180,51 @@ namespace UGF.EditorTools.Psd2UGUI
         }
     }
     /// <summary>
-    /// Psd文件转成UIForm prefab
+    /// PSD文件转成UIForm预制体的转换器
     /// </summary>
     [ExecuteInEditMode]
     [RequireComponent(typeof(SpriteRenderer))]
     public class Psd2UIFormConverter : MonoBehaviour
     {
+        /// <summary>
+        /// 图层操作记录名称
+        /// </summary>
         const string RecordLayerOperation = "Change Export Image";
+
+        /// <summary>
+        /// 单例实例
+        /// </summary>
         public static Psd2UIFormConverter Instance { get; private set; }
+
+        /// <summary>
+        /// PSD文件修改时间标识
+        /// </summary>
         [ReadOnlyField][SerializeField] public string psdAssetChangeTime;//文件修改时间标识
         [Tooltip("UIForm名字")][SerializeField] private string uiFormName;
         [Tooltip("关联的psd文件")][SerializeField] private UnityEngine.Sprite psdAsset;
         [Header("Debug:")][SerializeField] bool drawLayerRectGizmos = true;
         [SerializeField] UnityEngine.Color drawLayerRectGizmosColor = UnityEngine.Color.green;
 
+        /// <summary>
+        /// PSD文件解析实例
+        /// </summary>
         private PsdImage psdInstance;//psd文件解析实例
         private GUIStyle uiTypeLabelStyle;
+        /// <summary>
+        /// PSD资源名称
+        /// </summary>
         public string PsdAssetName => psdAsset != null ? AssetDatabase.GetAssetPath(psdAsset) : null;
+        /// <summary>
+        /// 绑定的PSD资源
+        /// </summary>
         public UnityEngine.Sprite BindPsdAsset => psdAsset;
+        /// <summary>
+        /// UI表单画布大小
+        /// </summary>
         public Vector2Int UIFormCanvasSize =>new Vector2Int(psdInstance.Width, psdInstance.Height);
+        /// <summary>
+        /// 当组件启用时调用
+        /// </summary>
         private void OnEnable()
         {
             Instance = this;
@@ -177,16 +242,25 @@ namespace UGF.EditorTools.Psd2UGUI
             }
         }
 
+        /// <summary>
+        /// 当组件启动时调用
+        /// </summary>
         private void Start()
         {
             RefreshNodesBindLayer();
         }
+        /// <summary>
+        /// 初始化Aspose许可证
+        /// </summary>
         [InitializeOnLoadMethod]
         static void InitAsposeLicense()
         {
             Debug.LogWarning("请设置你的Aspose证书, 否则导出图片带有水印");
             //new Aspose.PSD.License().SetLicense(new MemoryStream(Convert.FromBase64String("Your License Key")));
         }
+        /// <summary>
+        /// 绘制Gizmos
+        /// </summary>
         private void OnDrawGizmos()
         {
             if (drawLayerRectGizmos)
@@ -204,6 +278,11 @@ namespace UGF.EditorTools.Psd2UGUI
             }
         }
 
+        /// <summary>
+        /// 在层级窗口中绘制GUI
+        /// </summary>
+        /// <param name="instanceID">实例ID</param>
+        /// <param name="selectionRect">选择区域</param>
         private void OnHierarchyGUI(int instanceID, Rect selectionRect)
         {
             if (Event.current == null) return;
@@ -237,6 +316,12 @@ namespace UGF.EditorTools.Psd2UGUI
                 dropdownMenu.ShowAsContext();
             }
         }
+        /// <summary>
+        /// 弹出UI类型菜单
+        /// </summary>
+        /// <param name="layer">图层节点</param>
+        /// <param name="onSelectEnum">选择回调</param>
+        /// <returns>通用菜单</returns>
         private GenericMenu PopUITypesMenu(PsdLayerNode layer, Action<GUIType> onSelectEnum)
         {
             var names = Enum.GetValues(typeof(GUIType));
@@ -250,10 +335,10 @@ namespace UGF.EditorTools.Psd2UGUI
         }
 
         /// <summary>
-        /// 批量勾选导出图片
+        /// 批量设置导出图片标记
         /// </summary>
-        /// <param name="selects"></param>
-        /// <param name="exportImg"></param>
+        /// <param name="selects">选中的游戏对象</param>
+        /// <param name="exportImg">是否导出图片</param>
         private void SetExportImageTg(GameObject[] selects, bool exportImg)
         {
             var selectLayerNodes = selects.Where(item => item?.GetComponent<PsdLayerNode>() != null).ToArray();
@@ -262,11 +347,17 @@ namespace UGF.EditorTools.Psd2UGUI
                 layer.GetComponent<PsdLayerNode>().markToExport = exportImg;
             }
         }
+        /// <summary>
+        /// 当组件禁用时调用
+        /// </summary>
         private void OnDisable()
         {
             
             EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyGUI;
         }
+        /// <summary>
+        /// 当组件销毁时调用
+        /// </summary>
         private void OnDestroy()
         {
             if (this.psdInstance != null && !psdInstance.Disposed)
@@ -275,6 +366,9 @@ namespace UGF.EditorTools.Psd2UGUI
             }
         }
 
+        /// <summary>
+        /// 刷新节点绑定的图层
+        /// </summary>
         private void RefreshNodesBindLayer()
         {
             if (psdInstance == null || psdInstance.Disposed)
@@ -310,6 +404,9 @@ namespace UGF.EditorTools.Psd2UGUI
             spRender.sprite = this.psdAsset;
         }
         
+        /// <summary>
+        /// PSD2UIForm编辑器菜单项
+        /// </summary>
         [MenuItem("Assets/Psd2UIForm Editor", priority = 0)]
         static void Psd2UIFormPrefabMenu()
         {
@@ -334,20 +431,29 @@ namespace UGF.EditorTools.Psd2UGUI
             }
         }
 
+        /// <summary>
+        /// 检查PSD资源是否已更改
+        /// </summary>
+        /// <returns>是否已更改</returns>
         public bool CheckPsdAssetHasChanged()
         {
             if (psdAsset == null) return false;
             var fileTag = GetAssetChangeTag(PsdAssetName);
             return psdAssetChangeTime.CompareTo(fileTag) != 0;
         }
+        /// <summary>
+        /// 获取资源更改标记
+        /// </summary>
+        /// <param name="fileName">文件名</param>
+        /// <returns>更改标记</returns>
         public static string GetAssetChangeTag(string fileName)
         {
             return new FileInfo(fileName).LastWriteTimeUtc.ToString("yyyyMMddHHmmss");
         }
         /// <summary>
-        /// 打开psd图层信息prefab
+        /// 打开PSD图层信息预制体
         /// </summary>
-        /// <param name="psdLayerPrefab"></param>
+        /// <param name="psdLayerPrefab">PSD图层预制体路径</param>
         public static void OpenPsdLayerEditor(string psdLayerPrefab)
         {
 #if UNITY_2018_3_OR_NEWER
@@ -361,10 +467,11 @@ namespace UGF.EditorTools.Psd2UGUI
 #endif
         }
         /// <summary>
-        /// 把Psd图层解析成节点prefab
+        /// 将PSD图层解析为节点预制体
         /// </summary>
-        /// <param name="psdPath"></param>
-        /// <returns></returns>
+        /// <param name="psdFile">PSD文件路径</param>
+        /// <param name="instanceRoot">实例根节点</param>
+        /// <returns>是否成功</returns>
         public static bool ParsePsd2LayerPrefab(string psdFile, Psd2UIFormConverter instanceRoot = null)
         {
             if (!File.Exists(psdFile))
@@ -413,6 +520,11 @@ namespace UGF.EditorTools.Psd2UGUI
                 return savePrefabSuccess;
             }
         }
+        /// <summary>
+        /// 解析PSD图层到根节点
+        /// </summary>
+        /// <param name="psdFile">PSD文件路径</param>
+        /// <param name="converter">转换器实例</param>
         private static void ParsePsdLayer2Root(string psdFile, Psd2UIFormConverter converter)
         {
             var prefabFile = GetPsdLayerPrefabPath(psdFile);
@@ -482,6 +594,10 @@ namespace UGF.EditorTools.Psd2UGUI
                 AssetDatabase.OpenAsset(prefabAsset);
             }
         }
+        /// <summary>
+        /// 设置PSD资源
+        /// </summary>
+        /// <param name="psdFile">PSD文件路径</param>
         private void SetPsdAsset(string psdFile)
         {
             this.psdAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.Sprite>(psdFile);
@@ -496,14 +612,19 @@ namespace UGF.EditorTools.Psd2UGUI
         }
 
         /// <summary>
-        /// 获取解析好的psd layers文件
+        /// 获取解析好的PSD图层文件路径
         /// </summary>
-        /// <param name="psd"></param>
-        /// <returns></returns>
+        /// <param name="psd">PSD文件路径</param>
+        /// <returns>图层文件路径</returns>
         public static string GetPsdLayerPrefabPath(string psd)
         {
             return Path.Combine(Path.GetDirectoryName(psd), Path.GetFileNameWithoutExtension(psd) + "_psd_layers_parsed.prefab");
         }
+        /// <summary>
+        /// 创建PSD图层根节点
+        /// </summary>
+        /// <param name="rootName">根节点名称</param>
+        /// <returns>转换器实例</returns>
         private static Psd2UIFormConverter CreatePsdLayerRoot(string rootName)
         {
             var node = new GameObject(rootName);
@@ -511,6 +632,12 @@ namespace UGF.EditorTools.Psd2UGUI
             var layerRoot = node.AddComponent<Psd2UIFormConverter>();
             return layerRoot;
         }
+        /// <summary>
+        /// 创建PSD图层节点
+        /// </summary>
+        /// <param name="layer">PSD图层</param>
+        /// <param name="bindLayerIdx">绑定图层索引</param>
+        /// <returns>图层节点</returns>
         private static PsdLayerNode CreatePsdLayerNode(Layer layer, int bindLayerIdx)
         {
             string nodeName = layer.Name;
@@ -534,10 +661,10 @@ namespace UGF.EditorTools.Psd2UGUI
         }
 
         /// <summary>
-        /// 根据psd图层信息解析并初始化图层UI类型、是否导出等信息
+        /// 初始化图层节点数据
         /// </summary>
-        /// <param name="layerNode"></param>
-        /// <param name="layer"></param>
+        /// <param name="layerNode">图层节点</param>
+        /// <param name="layer">PSD图层</param>
         private static void InitLayerNodeData(PsdLayerNode layerNode, Layer layer)
         {
             if (layer == null || layer.Disposed) return;
@@ -552,9 +679,8 @@ namespace UGF.EditorTools.Psd2UGUI
         }
 
         /// <summary>
-        /// 导出psd图层为Sprites碎图
+        /// 导出PSD图层为精灵图片
         /// </summary>
-        /// <param name="psdAssetName"></param>
         internal void ExportSprites()
         {
             //var pngOpts = new PngOptions()
@@ -586,7 +712,7 @@ namespace UGF.EditorTools.Psd2UGUI
             AssetDatabase.Refresh();
         }
         /// <summary>
-        /// 根据解析后的节点树生成UIForm Prefab
+        /// 根据解析后的节点树生成UI表单预制体
         /// </summary>
         internal void GenerateUIForm()
         {
@@ -612,6 +738,11 @@ namespace UGF.EditorTools.Psd2UGUI
                 }
             }
         }
+        /// <summary>
+        /// 导出UI预制体
+        /// </summary>
+        /// <param name="outputDir">输出目录</param>
+        /// <returns>是否成功</returns>
         private bool ExportUIPrefab(string outputDir)
         {
             if (!string.IsNullOrWhiteSpace(outputDir))
@@ -681,6 +812,13 @@ namespace UGF.EditorTools.Psd2UGUI
             return true;
         }
 
+        /// <summary>
+        /// 根据实例ID路径获取或创建节点
+        /// </summary>
+        /// <param name="uiFormRoot">UI表单根节点</param>
+        /// <param name="goPath">游戏对象路径</param>
+        /// <param name="goNames">游戏对象名称</param>
+        /// <returns>目标节点</returns>
         private GameObject GetOrCreateNodeByInstanceIdPath(GameObject uiFormRoot, string[] goPath, string[] goNames)
         {
             GameObject result = uiFormRoot;
@@ -717,6 +855,12 @@ namespace UGF.EditorTools.Psd2UGUI
             return result;
         }
 
+        /// <summary>
+        /// 获取游戏对象实例ID路径
+        /// </summary>
+        /// <param name="go">游戏对象</param>
+        /// <param name="names">名称数组</param>
+        /// <returns>实例ID路径</returns>
         private string[] GetGameObjectInstanceIdPath(GameObject go, out string[] names)
         {
             names = null;
@@ -733,6 +877,10 @@ namespace UGF.EditorTools.Psd2UGUI
             }
             return result;
         }
+        /// <summary>
+        /// 获取可用的UI助手
+        /// </summary>
+        /// <returns>UI助手数组</returns>
         private UIHelperBase[] GetAvailableUIHelpers()
         {
             var uiHelpers = this.GetComponentsInChildren<UIHelperBase>();
@@ -761,9 +909,10 @@ namespace UGF.EditorTools.Psd2UGUI
             return uiHelpers;
         }
         /// <summary>
-        /// 把图片设置为为Sprite或Texture类型
+        /// 将图片设置为Sprite或Texture类型
         /// </summary>
-        /// <param name="dir"></param>
+        /// <param name="texAssets">纹理资源路径</param>
+        /// <param name="isImage">是否为图片</param>
         public static void ConvertTexturesType(string[] texAssets, bool isImage = true)
         {
             foreach (var item in texAssets)
@@ -798,8 +947,8 @@ namespace UGF.EditorTools.Psd2UGUI
         /// <summary>
         /// 压缩图片文件
         /// </summary>
-        /// <param name="asset">文件名(相对路径Assets)</param>
-        /// <returns></returns>
+        /// <param name="asset">资源路径</param>
+        /// <returns>是否成功</returns>
         public static bool CompressImageFile(string asset)
         {
             var assetPath = asset.StartsWith("Assets/") ? Path.Combine(Directory.GetParent(Application.dataPath).FullName, asset) : asset;
@@ -812,14 +961,19 @@ namespace UGF.EditorTools.Psd2UGUI
             return (bool)compressMethod.Invoke(null, new object[] { assetPath, assetPath });
         }
         /// <summary>
-        /// 获取UIForm对应的图片导出目录
+        /// 获取UI表单对应的图片导出目录
         /// </summary>
-        /// <returns></returns>
+        /// <returns>导出目录路径</returns>
         public string GetUIFormImagesOutputDir()
         {
             return Path.Combine(Psd2UIFormSettings.Instance.UIImagesOutputDir, uiFormName);
         }
 
+        /// <summary>
+        /// 将图层转换为智能对象图层
+        /// </summary>
+        /// <param name="layer">要转换的图层</param>
+        /// <returns>智能对象图层</returns>
         public SmartObjectLayer ConvertToSmartObjectLayer(Layer layer)
         {
             var smartObj = psdInstance.SmartObjectProvider.ConvertToSmartObject(new Layer[] { layer });
