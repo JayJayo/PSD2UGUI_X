@@ -39,7 +39,7 @@ namespace PSD2UGUI
 
             // 创建根RectTransform
             RectTransform rootRect = canvasObj.GetComponent<RectTransform>();
-            rootRect.sizeDelta = new Vector2(config.canvasSize.x, config.canvasSize.y);
+            rootRect.sizeDelta = config.canvasSize.ToVector2();
 
             // 创建UI容器
             GameObject containerObj = new GameObject("Container");
@@ -70,7 +70,7 @@ namespace PSD2UGUI
         /// <param name="layer">图层配置</param>
         /// <param name="parent">父节点</param>
         /// <returns>生成的游戏对象</returns>
-        private static GameObject GenerateLayer(LayerConfig layer, Transform parent)
+        private static GameObject GenerateLayer(Psd2UIFormConfig.LayerConfig layer, Transform parent)
         {
             if (layer == null) return null;
 
@@ -124,14 +124,14 @@ namespace PSD2UGUI
         /// </summary>
         /// <param name="obj">游戏对象</param>
         /// <param name="layer">图层配置</param>
-        private static void GenerateTextLayer(GameObject obj, LayerConfig layer)
+        private static void GenerateTextLayer(GameObject obj, Psd2UIFormConfig.LayerConfig layer)
         {
             if (layer.textInfo == null) return;
 
             TextMeshProUGUI text = obj.AddComponent<TextMeshProUGUI>();
             text.text = layer.textInfo.text;
             text.fontSize = layer.textInfo.size;
-            text.color = layer.textInfo.color;
+            text.color = new Color(layer.textInfo.color.r, layer.textInfo.color.g, layer.textInfo.color.b, layer.textInfo.color.a);
             text.alignment = (TextAlignmentOptions)layer.textInfo.alignment;
             text.lineSpacing = layer.textInfo.leading;
             text.characterSpacing = layer.textInfo.tracking;
@@ -143,7 +143,7 @@ namespace PSD2UGUI
         /// </summary>
         /// <param name="obj">游戏对象</param>
         /// <param name="layer">图层配置</param>
-        private static void GenerateImageLayer(GameObject obj, LayerConfig layer)
+        private static void GenerateImageLayer(GameObject obj, Psd2UIFormConfig.LayerConfig layer)
         {
             Image image = obj.AddComponent<Image>();
             image.color = new Color(layer.color.r, layer.color.g, layer.color.b, layer.opacity);
@@ -162,7 +162,7 @@ namespace PSD2UGUI
         /// </summary>
         /// <param name="obj">游戏对象</param>
         /// <param name="layer">图层配置</param>
-        private static void GenerateSolidColorLayer(GameObject obj, LayerConfig layer)
+        private static void GenerateSolidColorLayer(GameObject obj, Psd2UIFormConfig.LayerConfig layer)
         {
             Image image = obj.AddComponent<Image>();
             image.color = new Color(layer.color.r, layer.color.g, layer.color.b, layer.opacity);
@@ -173,7 +173,7 @@ namespace PSD2UGUI
         /// </summary>
         /// <param name="obj">游戏对象</param>
         /// <param name="effects">效果配置</param>
-        private static void ApplyLayerEffects(GameObject obj, LayerEffects effects)
+        private static void ApplyLayerEffects(GameObject obj, Psd2UIFormConfig.LayerEffects effects)
         {
             if (effects == null) return;
 

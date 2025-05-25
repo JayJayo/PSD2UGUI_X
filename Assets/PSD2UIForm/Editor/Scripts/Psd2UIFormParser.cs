@@ -76,7 +76,7 @@ namespace PSD2UGUI
                 return false;
             }
 
-            if (config.canvasSize.x <= 0 || config.canvasSize.y <= 0)
+            if (config.canvasSize == null || config.canvasSize.width <= 0 || config.canvasSize.height <= 0)
             {
                 Debug.LogError("画布大小无效");
                 return false;
@@ -97,7 +97,7 @@ namespace PSD2UGUI
         /// <param name="config">配置对象</param>
         /// <param name="layer">图层配置</param>
         /// <returns>图层路径</returns>
-        public static string GetLayerPath(Psd2UIFormConfig config, LayerConfig layer)
+        public static string GetLayerPath(Psd2UIFormConfig config, Psd2UIFormConfig.LayerConfig layer)
         {
             if (layer == null) return string.Empty;
 
@@ -105,7 +105,7 @@ namespace PSD2UGUI
             pathParts.Add(layer.name);
 
             // 使用parentId构建路径
-            LayerConfig currentLayer = layer;
+            Psd2UIFormConfig.LayerConfig currentLayer = layer;
             while (currentLayer.parentId != null)
             {
                 var parentLayer = FindLayer(config, currentLayer.parentId);
@@ -130,19 +130,13 @@ namespace PSD2UGUI
         /// <param name="config">配置对象</param>
         /// <param name="layerId">图层ID</param>
         /// <returns>图层配置</returns>
-        public static LayerConfig FindLayer(Psd2UIFormConfig config, string layerId)
+        public static Psd2UIFormConfig.LayerConfig FindLayer(Psd2UIFormConfig config, string layerId)
         {
             if (config == null || string.IsNullOrEmpty(layerId)) return null;
 
             foreach (var layer in config.layers)
             {
                 if (layer.id == layerId) return layer;
-                
-                if (layer.children != null)
-                {
-                    var childLayer = FindLayerInChildren(layer.children, layerId);
-                    if (childLayer != null) return childLayer;
-                }
             }
 
             return null;
@@ -154,7 +148,7 @@ namespace PSD2UGUI
         /// <param name="layers">图层列表</param>
         /// <param name="layerId">图层ID</param>
         /// <returns>图层配置</returns>
-        private static LayerConfig FindLayerInChildren(List<LayerConfig> layers, string layerId)
+        private static Psd2UIFormConfig.LayerConfig FindLayerInChildren(List<Psd2UIFormConfig.LayerConfig> layers, string layerId)
         {
             if (layers == null) return null;
 

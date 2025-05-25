@@ -373,11 +373,15 @@ function processLayer(layer, index, parentPath) {
 function exportPsdConfig() {
     var doc = app.activeDocument;
     
+    // 获取画布大小（像素）
+    var width = doc.width.as('px');
+    var height = doc.height.as('px');
+    
     // 重置配置
     config = {
         canvasSize: {
-            width: doc.width,
-            height: doc.height
+            width: Math.round(width),
+            height: Math.round(height)
         },
         layers: [],
         version: "1.0.0"
