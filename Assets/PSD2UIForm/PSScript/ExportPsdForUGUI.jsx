@@ -92,7 +92,7 @@ function convertAndExport(){
     convertLayersToSmartObjects (app.activeDocument.layers);
     //exportPSD();
 }
-//app.activeDocument.suspendHistory("Convert2SmartObject", "convertAndExport();");
+app.activeDocument.suspendHistory("Convert2SmartObject", "convertAndExport();");
 //~ convertLayersToSmartObjects (app.activeDocument.layers);
 
 
@@ -208,34 +208,47 @@ function getLayerType(layer) {
  * @returns {Object} 效果配置
  */
 function getLayerEffects(layer) {
-    var effects = {};
+    // 创建默认效果对象，所有效果默认为false
+    var effects = {
+        dropShadow: false,
+        innerShadow: false,
+        outerGlow: false,
+        innerGlow: false,
+        bevelEmboss: false
+    };
+
     try {
         var ref = new ActionReference();
         var keyLayerEffects = app.charIDToTypeID('Lefx');
         ref.putProperty(app.charIDToTypeID('Prpr'), keyLayerEffects);
         ref.putEnumerated(app.charIDToTypeID('Lyr '), app.charIDToTypeID('Ordn'), app.charIDToTypeID('Trgt'));
         var desc = executeActionGet(ref);
+        
         if (desc.hasKey(keyLayerEffects)) {
-            // 处理各种效果
-            if (desc.hasKey(stringIDToTypeID('dropShadow'))) {
+            var effectsDesc = desc.getObjectValue(keyLayerEffects);
+            
+            // 检查各种效果
+            if (effectsDesc.hasKey(stringIDToTypeID('dropShadow'))) {
                 effects.dropShadow = true;
             }
-            if (desc.hasKey(stringIDToTypeID('innerShadow'))) {
+            if (effectsDesc.hasKey(stringIDToTypeID('innerShadow'))) {
                 effects.innerShadow = true;
             }
-            if (desc.hasKey(stringIDToTypeID('outerGlow'))) {
+            if (effectsDesc.hasKey(stringIDToTypeID('outerGlow'))) {
                 effects.outerGlow = true;
             }
-            if (desc.hasKey(stringIDToTypeID('innerGlow'))) {
+            if (effectsDesc.hasKey(stringIDToTypeID('innerGlow'))) {
                 effects.innerGlow = true;
             }
-            if (desc.hasKey(stringIDToTypeID('bevelEmboss'))) {
+            if (effectsDesc.hasKey(stringIDToTypeID('bevelEmboss'))) {
                 effects.bevelEmboss = true;
             }
         }
     } catch (e) {
-        // 忽略错误
+        // 如果获取效果失败，返回默认效果对象
+        $.writeln("获取图层效果失败: " + e);
     }
+
     return effects;
 }
 
@@ -252,29 +265,38 @@ function getLayerColor(layer) {
         a: 1
     };
     
-    if (layer.kind === LayerKind.SOLIDFILL) {
-        try {
-            var ref = new ActionReference();
-            ref.putEnumerated(charIDToTypeID("Lyr "), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"));
-            var desc = executeActionGet(ref);
-            
-            if (desc.hasKey(charIDToTypeID("Clr "))) {
-                var colorDesc = desc.getObjectValue(charIDToTypeID("Clr "));
-                if (colorDesc.hasKey(charIDToTypeID("Rd  "))) {
-                    color.r = colorDesc.getInteger(charIDToTypeID("Rd  "));
-                }
-                if (colorDesc.hasKey(charIDToTypeID("Grn "))) {
-                    color.g = colorDesc.getInteger(charIDToTypeID("Grn "));
-                }
-                if (colorDesc.hasKey(charIDToTypeID("Bl  "))) {
-                    color.b = colorDesc.getInteger(charIDToTypeID("Bl  "));
-                }
+    try {
+        if (layer.kind === LayerKind.SOLIDFILL) {
+            // 对于纯色图层，使用fillColor
+            var fillColor = layer.fillColor;
+            if (fillColor) {
+                color.r = fillColor.rgb.red;
+                color.g = fillColor.rgb.green;
+                color.b = fillColor.rgb.blue;
             }
-            color.a = layer.opacity / 100;
-        } catch (e) {
-            // 如果获取颜色失败，使用默认白色
-            $.writeln("获取颜色失败: " + e);
+        } else if (layer.kind === LayerKind.TEXT) {
+            // 对于文本图层，使用文本颜色
+            var textColor = layer.textItem.color;
+            if (textColor) {
+                color.r = textColor.rgb.red;
+                color.g = textColor.rgb.green;
+                color.b = textColor.rgb.blue;
+            }
+        } else {
+            // 对于其他图层，尝试获取前景色
+            var foregroundColor = app.foregroundColor;
+            if (foregroundColor) {
+                color.r = foregroundColor.rgb.red;
+                color.g = foregroundColor.rgb.green;
+                color.b = foregroundColor.rgb.blue;
+            }
         }
+        
+        // 设置不透明度
+        color.a = layer.opacity / 100;
+    } catch (e) {
+        // 如果获取颜色失败，使用默认白色
+        $.writeln("获取颜色失败: " + e);
     }
     
     return color;
@@ -325,8 +347,7 @@ function processLayer(layer, index, parentPath) {
         },
         effects: getLayerEffects(layer),
         color: getLayerColor(layer),
-        parentId: parentPath.length > 0 ? parentPath[parentPath.length - 1] : null,
-        children: []
+        parentId: parentPath.length > 0 ? parentPath[parentPath.length - 1] : null
     };
 
     // 处理文本图层
@@ -334,18 +355,18 @@ function processLayer(layer, index, parentPath) {
         layerInfo.textInfo = getTextLayerInfo(layer);
     }
 
+    // 将当前图层添加到配置中
+    config.layers.push(layerInfo);
+
     // 处理图层组
     if (layer.typename === "LayerSet") {
         var newPath = parentPath.slice();
         newPath.push(layer.id.toString());
         
         for (var i = 0; i < layer.layers.length; i++) {
-            var childLayer = processLayer(layer.layers[i], i, newPath);
-            layerInfo.children.push(childLayer);
+            processLayer(layer.layers[i], i, newPath);
         }
     }
-
-    return layerInfo;
 }
 
 /**
@@ -354,14 +375,19 @@ function processLayer(layer, index, parentPath) {
 function exportPsdConfig() {
     var doc = app.activeDocument;
     
-    // 设置画布大小
-    config.canvasSize.width = doc.width;
-    config.canvasSize.height = doc.height;
+    // 重置配置
+    config = {
+        canvasSize: {
+            width: doc.width,
+            height: doc.height
+        },
+        layers: [],
+        version: "1.0.0"
+    };
     
     // 处理所有图层
     for (var i = 0; i < doc.layers.length; i++) {
-        var layer = processLayer(doc.layers[i], i, []);
-        config.layers.push(layer);
+        processLayer(doc.layers[i], i, []);
     }
     
     // 保存配置

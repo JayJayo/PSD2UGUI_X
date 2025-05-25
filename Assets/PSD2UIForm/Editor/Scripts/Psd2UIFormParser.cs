@@ -94,18 +94,30 @@ namespace PSD2UGUI
         /// <summary>
         /// 获取图层路径
         /// </summary>
+        /// <param name="config">配置对象</param>
         /// <param name="layer">图层配置</param>
         /// <returns>图层路径</returns>
-        public static string GetLayerPath(LayerConfig layer)
+        public static string GetLayerPath(Psd2UIFormConfig config, LayerConfig layer)
         {
             if (layer == null) return string.Empty;
 
             List<string> pathParts = new List<string>();
             pathParts.Add(layer.name);
 
-            if (layer.parentPath != null && layer.parentPath.Count > 0)
+            // 使用parentId构建路径
+            LayerConfig currentLayer = layer;
+            while (currentLayer.parentId != null)
             {
-                pathParts.AddRange(layer.parentPath);
+                var parentLayer = FindLayer(config, currentLayer.parentId);
+                if (parentLayer != null)
+                {
+                    pathParts.Add(parentLayer.name);
+                    currentLayer = parentLayer;
+                }
+                else
+                {
+                    break;
+                }
             }
 
             pathParts.Reverse();
